@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const Blog = require('../models/Blog');
 const authenticate = require('../middleware/authenticate');
+const slugify = require('slugify')
 
 const router = express.Router();
 
@@ -34,7 +35,8 @@ router.post('/', authenticate, upload.single('blogImage'), async (req, res) => {
         const blog = new Blog({
             title,
             description,
-            image: blogImage
+            image: blogImage,
+            slug: slugify(title)
         });
         await blog.save();
         res.status(201).send('Blog created successfully.');
@@ -54,11 +56,11 @@ router.get('/', async (req, res) => {
 });
 
 // Get single blogs
-router.get('/:id', async (req, res) => {
-    const { id } = req.params;
+router.get('/:slug', async (req, res) => {
+    const { slug } = req.params;
 
     try {
-        const blog = await Blog.findById(id);
+        const blog = await Blog.findOne({slug});
         res.send(blog);
     } catch (err) {
         res.status(500).send('Error fetching blogs: ' + err.message);
